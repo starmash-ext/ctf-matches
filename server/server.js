@@ -1,15 +1,28 @@
 import express from "express";
-import {dirname} from "path";
-import {initDB, loadHourlyPeaks, storeGamesInfos} from "./db.js";
+import fs from 'node:fs'
+import {
+  getFuturePlayTime,
+  initDB,
+  loadFuturePlays,
+  loadHourlyPeaks,
+  savePlayer,
+  storeGamesInfos,
+  togglePresence
+} from "./db.js";
 import axios from "axios";
-import {MINUTE} from "./utils.js";
+import cors from 'cors'
+import {DAY, MINUTE, tokenGenerate} from "./utils.js";
+import jwt from "jsonwebtoken";
 
 const app = express();
 const port = 3000;
-
+app.use(cors())
+app.use(express.json())
 
 initDB()
 
+
+const JWT_KEY = fs.readFileSync('../../jwt-key.txt', 'utf8');
 const fetchAndStoreGameInfo = async () => {
   const result = await axios.get('https://data.airmash.rocks/games')
   try {
@@ -37,13 +50,34 @@ fetchAndStoreGameInfo();
 
 app.use(express.static('../build'));
 
-app.post('/register', (req, res) => {
-  res.send('Welcome to my server!');
+app.post('/togglePresence', async(req, res) => {
+  let id = null
+  const date = new Date(req.body.date)
+  if (date.getMinutes() || date.getSeconds() || date.getMilliseconds() || date.getTime() > Date.now() + (4 * DAY)) {
+    res.sendStatus(401)
+    return
+  }
+  if (!req.body.jwt) {
+     id = await savePlayer(req.body.name, req.body.flag, req.ip, tokenGenerate(24))
+  } else {
+    jwt.verify(req.body.jwt, JWT_KEY, (err, decoded) => {
+      if (err) {
+        console.error('JWT verification failed:', err);
+        res.sendStatus(401);
+        return;
+      }
+      id = decoded.id
+    });
+  }
+  await togglePresence(id, req.body.date, req.ip)
+  const result = await getFuturePlayTime(req.body.date)
+  res.send({futurePlay: result, jwt: jwt.sign({id,name:req.body.name,flag:req.body.flag}, JWT_KEY)})
 });
 
 
 app.get('/listPeaks', async (req, res) => {
-  res.send(await loadHourlyPeaks('ctf1'));
+  const [peaks,futures] = await Promise.all([loadHourlyPeaks('ctf1'),loadFuturePlays('ctf1')])
+  res.send({peaks,futures});
 });
 
 app.listen(port, (e) => {

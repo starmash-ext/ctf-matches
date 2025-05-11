@@ -18,13 +18,23 @@ export const initDB = () => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
             flag TEXT,
-            jwt TEXT          
+            token TEXT          
        )`,
       (err) => {
         if (err) {
-          console.error("Error creating table FuturePlay " + err.message);
+          console.error("Error creating table Player " + err.message);
         } else {
-          console.log("Table FuturePlay created or already exists.");
+          console.log("Table Player created or already exists.");
+        }
+      }
+    );
+    db.run(
+      `ALTER TABLE Player ADD COLUMN token TEXT`,
+      (err) => {
+        if (err) {
+          console.error("Column token in table Player:" + err.message);
+        } else {
+          console.log("Column token created or already exists.");
         }
       }
     );
@@ -44,6 +54,16 @@ export const initDB = () => {
         }
       }
     );
+    db.run('CREATE UNIQUE INDEX IF NOT EXISTS idx_player_gametype_datetime ON FuturePlay (gametype, datetime, player);',
+      (err) => {
+        if (err) {
+          console.error("Error creating index on FuturePlay " + err.message);
+        } else {
+          console.log("Index on FuturePlay created or already exists.");
+        }
+      })
+
+
     db.run(
       `CREATE TABLE IF NOT EXISTS GameHistory (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -141,4 +161,101 @@ export const loadHourlyPeaks = (gameId) => {
       }
     );
   });
+}
+export const savePlayer = (name, flag, ip, token) => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      console.error("Database not initialized.");
+      return;
+    }
+    db.run(
+      `INSERT INTO Player (name, flag, token) VALUES (?, ?, ?)`,
+      [name, flag, token],
+      function (err) {
+        if (err) {
+          console.error("Error inserting player " + err.message);
+          reject(err);
+        } else {
+          resolve(this.lastID);
+        }
+      }
+    );
+  })
+}
+
+export const togglePresence = (playerId, date, ip) => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      console.error("Database not initialized.");
+      return;
+    }
+    db.run(
+      `INSERT INTO FuturePlay (gametype, datetime, player, ip) VALUES (?, ?, ?, ?)`,
+      ['ctf1', date / 1000, playerId, ip],
+      function (err) {
+        if (err) { //delete if already exists
+          db.run(
+            `DELETE FROM FuturePlay WHERE gametype = ? AND datetime = ? AND player = ?`,
+            ['ctf1', date / 1000, playerId],
+            function (err) {
+              if (err) {
+                console.error("Error deleting player " + err.message);
+                reject(err);
+              } else {
+                resolve(this.lastID);
+              }
+            }
+          );
+        } else {
+          resolve(this.lastID);
+        }
+      }
+    );
+  })
+}
+
+export const getFuturePlayTime = (date) => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      console.error("Database not initialized.");
+      return;
+    }
+    db.all(
+      `SELECT player, name, flag, datetime FROM FuturePlay FP 
+        JOIN Player P ON FP.player = P.id
+    WHERE datetime = ? and gametype = ?`,
+      [date / 1000, 'ctf1'],
+      (err, rows) => {
+        if (err) {
+          console.error("Error loading future play time " + err.message);
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      }
+    );
+  });
+}
+
+export const loadFuturePlays = (gametype) => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      console.error("Database not initialized.");
+      return;
+    }
+    db.all(
+      `SELECT player, name, flag, datetime FROM FuturePlay FP 
+        JOIN Player P ON FP.player = P.id
+    WHERE datetime > ? and gametype = ?`,
+      [Math.floor(Date.now() / 1000), gametype],
+      (err, rows) => {
+        if (err) {
+          console.error("Error loading future play time " + err.message);
+          reject(err);
+        } else {
+          resolve(rows);
+        }
+      }
+    );
+  })
 }
