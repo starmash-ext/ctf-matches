@@ -81,16 +81,6 @@ export const initDB = () => {
       }
     );
     db.run(
-      'DROP TABLE IF EXISTS GameHistoryHourlyPeak',
-      (err) => {
-        if (err) {
-          console.error("Error dropping table GameHistoryHourlyPeak " + err.message);
-        } else {
-          console.log("Table GameHistoryHourlyPeak dropped.");
-        }
-      }
-    )
-    db.run(
       `CREATE TABLE IF NOT EXISTS GameHistoryHourlyPeak (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         gameid TEXT,
@@ -113,18 +103,7 @@ export const initDB = () => {
         } else {
           console.log("Index on GameHistoryHourlyPeak created or already exists.");
         }
-      })
-    db.all(
-      `SELECT gameid, server, datetime, playing FROM GameHistory ORDER BY datetime DESC`,
-      (err, rows) => {
-        if (err) {
-          console.error("Error loading hourly peaks " + err.message);
-        } else {
-          console.log("Loaded hourly peaks from GameHistory");
-          storePeaks(rows)
-        }
-      }
-    );
+    })
     // Add other table creation queries here as needed
   });
 
