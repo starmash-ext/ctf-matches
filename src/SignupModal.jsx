@@ -8,7 +8,7 @@ import {
   ModalHeader,
   TextInput,
   Select,
-  Dropdown, DropdownItem, createTheme, ThemeProvider
+  Dropdown, DropdownItem, createTheme, ThemeProvider, Spinner
 } from "flowbite-react";
 import {COUNTRIES, COUNTRY_CODE_TO_COUNTRY, SERVER_URL} from "./constants.jsx";
 import {FlagIcon} from "./FlagIcon.jsx";
@@ -27,13 +27,23 @@ const FlagItem = ({country}) => <>
   <span style={{paddingLeft: "0.5rem"}}>{country.name}</span>
 </>
 
-export function SignupModal({show, close}) {
+export function SignupModal({show, close, onSuccess}) {
+  const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState("");
   const [flag, setFlag] = useState("");
 
-  const submitForm = (e) => {
+  const submitForm = async (e) => {
     e.preventDefault()
-    axios.post(SERVER_URL + 'togglePresence', {name,flag,date: show.date})
+    setIsLoading(true)
+    try {
+      const result = await axios.post(SERVER_URL + 'togglePresence', {name,flag,date: show.date})
+      onSuccess(show.date,result.data)
+      close()
+    } catch (e) {
+
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -63,14 +73,10 @@ export function SignupModal({show, close}) {
               <Label htmlFor="password1">Flag</Label>
             </div>
             <Dropdown
-              label={flag
+              renderTrigger={(e) => <Button color="alternative" fullSized>{flag
                 ? <FlagItem country={COUNTRY_CODE_TO_COUNTRY[flag]}/>
                 : "Country Flag"
-              } renderTrigger={(e) => <TextInput
-              readOnly
-              placeholder={flag ? COUNTRY_CODE_TO_COUNTRY[flag].name : "Country Flag"}
-              icon={flag && (() => <FlagIcon code={flag}/>)}
-            />} placement="bottom" theme={DropdownTheme}
+              }</Button>} placement="bottom" theme={DropdownTheme}
             >
               {COUNTRIES.map(country =>
                 <DropdownItem key={country.id} onClick={() => setFlag(country.code)}>
@@ -81,7 +87,9 @@ export function SignupModal({show, close}) {
           </div>
         </ModalBody>
         <ModalFooter>
-          <Button type="submit">Submit</Button>
+          <Button type="submit">
+            {isLoading && <Spinner size="sm" aria-label="Info spinner example" className="me-3" light />}
+            Submit</Button>
           <span className="text-gray-500 text-sm"> (will be saved for next time)</span>
         </ModalFooter>
         </form>

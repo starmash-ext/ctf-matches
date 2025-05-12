@@ -81,6 +81,16 @@ export const initDB = () => {
       }
     );
     db.run(
+      'DROP TABLE IF EXISTS GameHistoryHourlyPeak',
+      (err) => {
+        if (err) {
+          console.error("Error dropping table GameHistoryHourlyPeak " + err.message);
+        } else {
+          console.log("Table GameHistoryHourlyPeak dropped.");
+        }
+      }
+    )
+    db.run(
       `CREATE TABLE IF NOT EXISTS GameHistoryHourlyPeak (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         gameid TEXT,
@@ -104,9 +114,20 @@ export const initDB = () => {
           console.log("Index on GameHistoryHourlyPeak created or already exists.");
         }
       })
-
+    db.all(
+      `SELECT gameid, server, datetime, playing FROM GameHistory ORDER BY datetime DESC`,
+      (err, rows) => {
+        if (err) {
+          console.error("Error loading hourly peaks " + err.message);
+        } else {
+          console.log("Loaded hourly peaks from GameHistory");
+          storePeaks(rows)
+        }
+      }
+    );
     // Add other table creation queries here as needed
   });
+
 
   return db;
 
@@ -129,8 +150,11 @@ export const storeGamesInfos = (gamesInfos) => {
     );
   });
   history.finalize();
+  storePeaks(gamesInfos)
+}
+const storePeaks = (gamesInfos) => {
   const peak = db.prepare(`INSERT INTO GameHistoryHourlyPeak (gameid, server, datetime, playing) VALUES (?, ?, ?, ?) 
-      ON CONFLICT (gameid,server,datetime) DO UPDATE SET playing = excluded.playing`,)
+      ON CONFLICT (gameid,server,datetime) DO UPDATE SET playing = MAX(excluded.playing,playing)`,)
   gamesInfos.forEach((gameInfo) => {
     peak.run(
       gameInfo.gameid,

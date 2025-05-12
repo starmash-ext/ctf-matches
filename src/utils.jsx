@@ -40,8 +40,9 @@ const SMALL_DAY_LABEL = {
   'Day after tomorrow': 'Omrw'
 }
 
-export const createSeries = (hourlyPeaks) => {
+export const createSeries = (hourlyPeaks,futures) => {
   const today = new Date()
+  const futurePlaysMap = _.groupBy(_.get('datetime'),futures)
   today.setHours(0,0,0,0)
   const startAt = today.getTime() - (7 * DAY)
   const data = _.times(day => {
@@ -55,10 +56,12 @@ export const createSeries = (hourlyPeaks) => {
       values: _.times(hour => {
         const currentTime = (currentDate.getTime() + (hour * HOUR))
         if (currentTime > Date.now()) {
+          const futurePlays = futurePlaysMap[currentTime/1000]
           return {
             date: currentTime,
             hour,
-            value: 0
+            players: futurePlays,
+            value: futurePlays?.length || 0
           }
         } else {
           return {
@@ -118,5 +121,13 @@ export const getEasternTime = (date, userHour) => {
   const UShour = (24 + new Date(date).getUTCHours() - (USTimezone === 'EDT' ? 4 : 5)) % 24
   if (userHour!==UShour) {
     return ` (${UShour}h ${USTimezone})`
+  }
+}
+
+export const getJwtUser = () => {
+  try {
+    return jwtDecode(localStorage.getItem("jwt"))
+  } catch (e) {
+    return null
   }
 }

@@ -1,17 +1,31 @@
-import React, {use, useEffect, useLayoutEffect, useRef, useState} from 'react'
-import * as d3 from 'd3'
+import React, {use, useLayoutEffect, useRef, useState} from 'react'
 import _ from 'lodash/fp'
-import {createSeries, getEasternTime} from "./utils";
+import * as d3 from 'd3'
+import {createSeries, getJwtUser} from "./utils";
 import axios from "axios";
-import {SERVER_URL} from "./constants";
-import { Modal } from "flowbite-react";
+import {COUNTRY_CODE_TO_COUNTRY, SERVER_URL} from "./constants";
 import {SignupModal} from "./SignupModal.jsx";
 
 export const HourlyHeatmap = ({peaksPromise}) => {
-  const peaks = use(peaksPromise).data
+  const loadedData = use(peaksPromise).data
+  const [peaks,setPeaks] = useState(loadedData.peaks)
+  const [futures,setFutures] = useState(loadedData.futures)
   const d3ref = useRef(null)
   const tooltipRef = useRef(null)
   const [showSignupModal, setShowSignupModal] = useState()
+
+  const toggleUpdateSuccess = (date,data) => {
+    const {futurePlay, jwt} = data
+    setFutures(
+      _.flow(
+        _.filter(future => (future.datetime * 1000) !== date),
+        _.concat(futurePlay)
+      )
+    )
+    localStorage.setItem("jwt",jwt)
+  }
+
+  const currentUser = getJwtUser()
 
   useLayoutEffect(() => {
 // set the dimensions and margins of the graph
@@ -45,7 +59,7 @@ export const HourlyHeatmap = ({peaksPromise}) => {
       .style("max-width", 400)
       .text("A short description of the take-away message of this chart.");
 
-      const {rows,rowNames,columns,data} = createSeries(peaks)
+      const {rows,rowNames,columns,data} = createSeries(peaks,futures)
 
       // Labels of row and columns -> unique identifier of the column called 'group' and 'variable'
 
@@ -101,9 +115,21 @@ export const HourlyHeatmap = ({peaksPromise}) => {
           .style("stroke", "black")
           .style("opacity", 1)
       }
-      const mousemove = function(event,d) {
+      const mousemove = function(event,d) {console.log(d) ||
         tooltip
-          .html(`[${d.value}] players ${d.day}, ${d.hour}h${d.easternHour}`)
+          .html(
+            d.date < Date.now()
+              ? `[${d.value}] players ${d.day}, ${d.hour}h${d.easternHour}`
+              : d?.players
+                ? `Players that may join: 
+              <ul>
+                ${d.players.map(player => `<li>
+                  <img width=20 height=20 src='/flags/flag_${COUNTRY_CODE_TO_COUNTRY[player.flag]?.id}.png'/> ${player.name}
+                </li>`).join("")}
+              </ul>
+`
+              : `No players for ${d.day}, ${d.hour}h${d.easternHour}. Click to join`
+          )
           .style("left", (event.x) + "px")
           .style("top", (event.y) + "px")
       }
@@ -112,18 +138,18 @@ export const HourlyHeatmap = ({peaksPromise}) => {
           .style("opacity", 0)
         d3.select(this)
           .style("stroke", "none")
-          .style("opacity", 0.8)
+          // .style("opacity", 0.8)
       }
-      const click = function(event,d) {
+      const click = async function(event,d) {
         if (d.date < Date.now()) return
         if (localStorage.getItem("jwt")) {
-          axios.post(SERVER_URL + 'togglePresence', {jwt: localStorage.getItem("jwt"),date: d.date})
+          const result = await axios.post(SERVER_URL + 'togglePresence', {jwt: localStorage.getItem("jwt"),date: d.date})
+          toggleUpdateSuccess(d.date,result.data)
         } else {
           setShowSignupModal(d)
         }
       }
 
-      console.log(data)
       // add the squares
       svg.selectAll()
         .data(data, function(d) {return d.hour+':'+d.row})
@@ -143,9 +169,35 @@ export const HourlyHeatmap = ({peaksPromise}) => {
         .on("mouseleave", mouseleave)
         .on("click", click)
 
+    svg.selectAll()
+      .data(data, function(d) {return d.hour+':'+d.row})
+      .join("text")
+      .attr("x", function(d) { return x(d.hour) + (x.bandwidth() / 2) - 8 })
+      .attr("y", function(d) { return y(d.row) + 20 })
+      .attr("width", 1 )
+      .style("pointer-events","none")
+      .attr("height", 1 )
+      .style("opacity",function(d) { return d.players ? 1 : 0 })
+        .attr('font-family', 'fontello')
+        .attr('font-size', function(d) { return '16px'} )
+        .text('\ue800');
+    /*.append(function (d,i,list) {
+      const icon = document.createElement('span')
+      if (d.players) {
+        icon.className = "heat-icon"
+        icon.innerText = '\ue800'
+      } else {
+        icon.className = "heat-icon"
+        icon.innerText = "ASA"
+      }
+      return icon
+    })*/
 
+    return () => {
+      svg.selectAll('*').remove();
+    };
 
-  }, );
+  },[futures,peaks] );
 
   return (
     <div>
@@ -154,7 +206,7 @@ export const HourlyHeatmap = ({peaksPromise}) => {
       </div>
       <div id="html-dist"></div>
       <div ref={tooltipRef}/>
-      <SignupModal show={showSignupModal} close={() => setShowSignupModal(undefined)}/>
+      <SignupModal show={showSignupModal} close={() => setShowSignupModal(undefined)} onSuccess={toggleUpdateSuccess}/>
     </div>
   );
 }
