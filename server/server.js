@@ -81,7 +81,7 @@ app.post('/togglePresence', async(req, res) => {
   } else {
     player = await getPlayer(id)
   }
-  await togglePresence(id, req.body.date, req.ip)
+  await togglePresence(player.id, req.body.date, req.ip)
   const result = await getFuturePlayTime(req.body.date)
 
   res.send({futurePlay: result, jwt: jwt.sign(player, JWT_KEY)})
