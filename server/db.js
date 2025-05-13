@@ -225,11 +225,13 @@ export const togglePresence = (playerId, date, ip) => {
       console.error("Database not initialized.");
       return;
     }
+    console.log("inserting presence",playerId,date,ip)
     db.run(
       `INSERT INTO FuturePlay (gametype, datetime, player, ip) VALUES (?, ?, ?, ?)`,
       ['ctf1', date / 1000, playerId, ip],
       function (err) {
         if (err) { //delete if already exists
+          console.log(err)
           db.run(
             `DELETE FROM FuturePlay WHERE gametype = ? AND datetime = ? AND player = ?`,
             ['ctf1', date / 1000, playerId],
