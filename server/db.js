@@ -214,7 +214,7 @@ export const updatePlayer = (id, name, flag, ip) => {
       return;
     }
     db.run(
-      `UPDATE Player SET name = ?, flag = ?, ip = ? WHERE id = ?`,
+      `UPDATE Player SET name = ?, flag = ? WHERE id = ?`,
       [name, flag, ip, id],
       function (err) {
         if (err) {

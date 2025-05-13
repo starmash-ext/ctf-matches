@@ -24,13 +24,13 @@ export const LoggedUserInfo = ({onSuccess}) => {
   const [editDialog,setEditDialog] = useState()
   useEffect(() => {
     setName(user.name)
-    setName(user.flag)
+    setFlag(user.flag)
   }, [user.name,user.flag]);
   const submitForm = async (e) => {
     e.preventDefault()
     setIsLoading(true)
     try {
-      const result = await axios.post(SERVER_URL + 'updatePlayer', {name,flag})
+      const result = await axios.post(SERVER_URL + 'updatePlayer', {jwt: localStorage.getItem("jwt"),name,flag})
       localStorage.setItem("jwt", result.data.jwt)
       setEditDialog(false)
       onSuccess()
@@ -43,7 +43,14 @@ export const LoggedUserInfo = ({onSuccess}) => {
 
 
   return <div>
-    You will appear as: <FlagIcon code={user.flag} />{user.name} <a onClick={() => setEditDialog(true)}>Edit</a>
+    You will appear as: <span
+    onClick={() => setEditDialog(true)}
+    style={{display:'inline-block',borderRadius:'4px',backgroundColor:"#DDD",padding:'4px','cursor':'pointer'}}
+  >
+    <FlagIcon code={user.flag} />{user.name}
+    <a style={{color:'#5490ea',fontSize:'12px'}}>(Edit)</a>
+  </span>
+
       <Modal show={editDialog} onClose={() => setEditDialog(false)} size="md">
         <form onSubmit={submitForm}>
           <ModalHeader>Update player info</ModalHeader>
