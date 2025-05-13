@@ -55,36 +55,10 @@ export function SignupModal({show, close, onSuccess}) {
             <div className="mb-2 block">
               <Label htmlFor="email1">Time and day</Label>
             </div>
-            <TextInput type="text" readOnly value={show && `${show.day} at ${show.hour}h${show.easternHour}`}/>
+            <TextInput maxlength={20} type="text" readOnly value={show && `${show.day} at ${show.hour}h${show.easternHour}`}/>
           </div>
-          <div>
-            <div className="mb-2 mt-2 block">
-              <Label htmlFor="email1">Your player name</Label>
-            </div>
-            <TextInput
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div>
-            <div className="mb-2 mt-2 block">
-              <Label htmlFor="password1">Flag</Label>
-            </div>
-            <Dropdown
-              renderTrigger={(e) => <Button color="alternative" fullSized>{flag
-                ? <FlagItem country={COUNTRY_CODE_TO_COUNTRY[flag]}/>
-                : "Country Flag"
-              }</Button>} placement="bottom" theme={DropdownTheme}
-            >
-              {COUNTRIES.map(country =>
-                <DropdownItem key={country.id} onClick={() => setFlag(country.code)}>
-                  <FlagItem country={country}/>
-                </DropdownItem>
-              )}
-            </Dropdown>
-          </div>
+          <NameField name={name} setName={setName} />
+          <FlagField code={flag} setCode={setFlag}/>
         </ModalBody>
         <ModalFooter>
           <Button type="submit">
@@ -97,3 +71,34 @@ export function SignupModal({show, close, onSuccess}) {
 
   );
 }
+
+export const FlagField = ({code,setCode}) => <div>
+  <div className="mb-2 mt-2 block">
+    <Label htmlFor="password1">Flag</Label>
+  </div>
+  <Dropdown
+    renderTrigger={(e) => <Button color="alternative" fullSized>{code
+      ? <FlagItem country={COUNTRY_CODE_TO_COUNTRY[code]}/>
+      : "Country Flag"
+    }</Button>} placement="bottom" theme={DropdownTheme}
+  >
+    {COUNTRIES.map(country =>
+      <DropdownItem key={country.id} onClick={() => setCode(country.code)}>
+        <FlagItem country={country}/>
+      </DropdownItem>
+    )}
+  </Dropdown>
+</div>
+
+
+export const NameField = ({name,setName}) => <div>
+  <div className="mb-2 mt-2 block">
+    <Label htmlFor="name">Your player name</Label>
+  </div>
+  <TextInput
+    type="text"
+    required
+    value={name}
+    onChange={(e) => setName(e.target.value)}
+  />
+</div>

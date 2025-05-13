@@ -1,5 +1,5 @@
 import _ from 'lodash/fp'
-
+import {jwtDecode} from 'jwt-decode'
 export const MINUTE = 60 * 1000;
 export const HOUR = 60 * MINUTE;
 export const DAY = 24 * HOUR;
@@ -12,32 +12,32 @@ function getTimezoneOffsetForLongName(timeZone) {
 getTimezoneOffsetForLongName("EST")
 
 const WEEKDAY_LABELS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday"
+  "sunday",
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday"
 ]
 const RELATIVE_DAY_LABEL = {
-  '9': 'Day after tomorrow',
-  '8': 'Tomorrow',
-  '7': 'Today',
-  '6': 'Yesterday'
+  '9': 'the day after tomorrow',
+  '8': 'tomorrow',
+  '7': 'today',
+  '6': 'yesterday'
 }
 const SMALL_DAY_LABEL = {
-  'Sunday': 'Sun',
-  'Monday': 'Mon',
-  'Tuesday': 'Tue',
-  'Wednesday': 'Wed',
-  'Thursday': 'Thu',
-  'Friday': 'Fri',
-  'Saturday': 'Sat',
-  'Tomorrow': 'Tmrw',
-  'Today': 'Today',
-  'Yesterday': 'Yday',
-  'Day after tomorrow': 'Omrw'
+  'sunday': 'Sun',
+  'monday': 'Mon',
+  'tuesday': 'Tue',
+  'wednesday': 'Wed',
+  'thursday': 'Thu',
+  'friday': 'Fri',
+  'saturday': 'Sat',
+  'tomorrow': 'Tmrw',
+  'today': 'Today',
+  'yesterday': 'Yday',
+  'the day after tomorrow': 'Omrw'
 }
 
 export const createSeries = (hourlyPeaks,futures) => {

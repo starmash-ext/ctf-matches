@@ -186,6 +186,49 @@ export const savePlayer = (name, flag, ip, token) => {
   })
 }
 
+export const getPlayer = (id) => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      console.error("Database not initialized.");
+      return;
+    }
+    db.get(
+      `SELECT id, name, flag FROM Player WHERE id = ?`,
+      [id],
+      (err, row) => {
+        if (err) {
+          console.error("Error loading player " + err.message);
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      }
+    );
+  });
+}
+
+export const updatePlayer = (id, name, flag, ip) => {
+  return new Promise((resolve, reject) => {
+    if (!db) {
+      console.error("Database not initialized.");
+      return;
+    }
+    db.run(
+      `UPDATE Player SET name = ?, flag = ?, ip = ? WHERE id = ?`,
+      [name, flag, ip, id],
+      function (err) {
+        if (err) {
+          console.error("Error inserting player " + err.message);
+          reject(err);
+        } else {
+          resolve(this.lastID);
+        }
+      }
+    );
+  })
+}
+
+
 export const togglePresence = (playerId, date, ip) => {
   return new Promise((resolve, reject) => {
     if (!db) {

@@ -6,7 +6,7 @@ import axios from "axios";
 import {COUNTRY_CODE_TO_COUNTRY, SERVER_URL} from "./constants";
 import {SignupModal} from "./SignupModal.jsx";
 
-export const HourlyHeatmap = ({peaksPromise}) => {
+export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
   const loadedData = use(peaksPromise).data
   const [peaks,setPeaks] = useState(loadedData.peaks)
   const [futures,setFutures] = useState(loadedData.futures)
@@ -14,7 +14,7 @@ export const HourlyHeatmap = ({peaksPromise}) => {
   const tooltipRef = useRef(null)
   const [showSignupModal, setShowSignupModal] = useState()
 
-  const toggleUpdateSuccess = (date,data) => {
+  const toggleUpdateSuccess = (date,data,updatedUser) => {
     const {futurePlay, jwt} = data
     setFutures(
       _.flow(
@@ -23,6 +23,9 @@ export const HourlyHeatmap = ({peaksPromise}) => {
       )
     )
     localStorage.setItem("jwt",jwt)
+    if (updatedUser) {
+      onCreateUser()
+    }
   }
 
   const currentUser = getJwtUser()
@@ -47,7 +50,7 @@ export const HourlyHeatmap = ({peaksPromise}) => {
       .attr("y", -50)
       .attr("text-anchor", "left")
       .style("font-size", "22px")
-      .text("A d3.js heatmap");
+      .text("CTF matches calendar");
 
 // Add subtitle to graph
     svg.append("text")
@@ -57,7 +60,7 @@ export const HourlyHeatmap = ({peaksPromise}) => {
       .style("font-size", "14px")
       .style("fill", "grey")
       .style("max-width", 400)
-      .text("A short description of the take-away message of this chart.");
+      .text("Next few days + Past week");
 
       const {rows,rowNames,columns,data} = createSeries(peaks,futures)
 
@@ -71,7 +74,7 @@ export const HourlyHeatmap = ({peaksPromise}) => {
       svg.append("g")
         .style("font-size", 15)
         .attr("transform", `translate(0, ${height})`)
-        .call(d3.axisBottom(x).tickSize(0))
+        .call(d3.axisBottom(x).tickSize(0).tickValues(d3.range(0, 24, 3)))
         .select(".domain").remove()
 
       // Build Y scales and axis:
@@ -85,12 +88,22 @@ export const HourlyHeatmap = ({peaksPromise}) => {
         .select(".domain").remove()
 
       // Build color scale
-      const color = d3.scaleSequential()
+      const pastColor = d3.scaleSequential()
         .interpolator((t) => {
           if (t < 0.1) {
             return "white"; // Return white at the start of the domain (t=0)
           } else {
-            return d3.interpolateYlOrRd(t); // Or any other interpolator
+            return d3.interpolateBlues(t); // Or any other interpolator
+          }
+        })
+        .domain([0,20])
+      // Build color scale
+      const futureColor = d3.scaleSequential()
+        .interpolator((t) => {
+          if (t === 0) {
+            return "white"; // Return white at the start of the domain (t=0)
+          } else {
+            return d3.interpolateGreens(t); // Or any other interpolator
           }
         })
         .domain([0,20])
@@ -115,20 +128,20 @@ export const HourlyHeatmap = ({peaksPromise}) => {
           .style("stroke", "black")
           .style("opacity", 1)
       }
-      const mousemove = function(event,d) {console.log(d) ||
+      const mousemove = function(event,d) {
         tooltip
           .html(
             d.date < Date.now()
               ? `[${d.value}] players ${d.day}, ${d.hour}h${d.easternHour}`
               : d?.players
-                ? `Players that may join: 
+                ? `Players that hope to join ${d.day}, ${d.hour}h${d.easternHour}: 
               <ul>
-                ${d.players.map(player => `<li>
-                  <img width=20 height=20 src='/flags/flag_${COUNTRY_CODE_TO_COUNTRY[player.flag]?.id}.png'/> ${player.name}
+                ${d.players.map(player => `<li style="word-break: keep-all">
+                  ${player.flag ? `<img style="display: inline-block;" width=20 height=20 src='/flags/flag_${COUNTRY_CODE_TO_COUNTRY[player.flag]?.id}.png'/>` : ''} ${player.name}
                 </li>`).join("")}
               </ul>
 `
-              : `No players for ${d.day}, ${d.hour}h${d.easternHour}. Click to join`
+              : `No players scheduled for ${d.day}, ${d.hour}h${d.easternHour} yet. Click to schedule`
           )
           .style("left", (event.x) + "px")
           .style("top", (event.y) + "px")
@@ -144,7 +157,7 @@ export const HourlyHeatmap = ({peaksPromise}) => {
         if (d.date < Date.now()) return
         if (localStorage.getItem("jwt")) {
           const result = await axios.post(SERVER_URL + 'togglePresence', {jwt: localStorage.getItem("jwt"),date: d.date})
-          toggleUpdateSuccess(d.date,result.data)
+          toggleUpdateSuccess(d.date,result.data,false)
         } else {
           setShowSignupModal(d)
         }
@@ -160,7 +173,7 @@ export const HourlyHeatmap = ({peaksPromise}) => {
         .attr("ry", 4)
         .attr("width", x.bandwidth() )
         .attr("height", y.bandwidth() )
-        .style("fill", function(d) { return color(d.value)} )
+        .style("fill", function(d) { return d.date > Date.now() ? futureColor(d.value) : pastColor(d.value) } )
         .style("stroke-width", 4)
         .style("stroke", "none")
         .style("opacity", 0.8)
@@ -177,21 +190,10 @@ export const HourlyHeatmap = ({peaksPromise}) => {
       .attr("width", 1 )
       .style("pointer-events","none")
       .attr("height", 1 )
-      .style("opacity",function(d) { return d.players ? 1 : 0 })
+      .style("opacity",function(d) { return d.players?.find(({player}) => player === currentUser?.id) ? 1 : 0 })
         .attr('font-family', 'fontello')
         .attr('font-size', function(d) { return '16px'} )
         .text('\ue800');
-    /*.append(function (d,i,list) {
-      const icon = document.createElement('span')
-      if (d.players) {
-        icon.className = "heat-icon"
-        icon.innerText = '\ue800'
-      } else {
-        icon.className = "heat-icon"
-        icon.innerText = "ASA"
-      }
-      return icon
-    })*/
 
     return () => {
       svg.selectAll('*').remove();

@@ -1,13 +1,13 @@
 import express from "express";
 import fs from 'node:fs'
 import {
-  getFuturePlayTime,
+  getFuturePlayTime, getPlayer,
   initDB,
   loadFuturePlays,
   loadHourlyPeaks,
   savePlayer,
   storeGamesInfos,
-  togglePresence
+  togglePresence, updatePlayer
 } from "./db.js";
 import axios from "axios";
 import cors from 'cors'
@@ -48,32 +48,49 @@ setInterval(fetchAndStoreGameInfo, 5 * MINUTE);
 fetchAndStoreGameInfo();
 
 
-app.use(express.static('../build'));
+app.use(express.static('../dist'));
+
+const getId = req => {
+  let id = null
+  jwt.verify(req.body.jwt, JWT_KEY, (err, decoded) => {
+    if (err) {
+      console.error('JWT verification failed:', err);
+    } else {
+      id = decoded.id
+    }
+  });
+  return id
+}
 
 app.post('/togglePresence', async(req, res) => {
-  let id = null
+  const id = getId(req)
+  let player = null
   const date = new Date(req.body.date)
   if (date.getMinutes() || date.getSeconds() || date.getMilliseconds() || date.getTime() > Date.now() + (4 * DAY)) {
     res.sendStatus(401)
     return
   }
-  if (!req.body.jwt) {
-     id = await savePlayer(req.body.name, req.body.flag, req.ip, tokenGenerate(24))
+  if (!id) {
+    const id = await savePlayer(req.body.name, req.body.flag, req.ip, tokenGenerate(24))
+    player = {id,name: req.body.name,flag: req.body.flag}
   } else {
-    jwt.verify(req.body.jwt, JWT_KEY, (err, decoded) => {
-      if (err) {
-        console.error('JWT verification failed:', err);
-        res.sendStatus(401);
-        return;
-      }
-      id = decoded.id
-    });
+    player = await getPlayer(id)
   }
   await togglePresence(id, req.body.date, req.ip)
   const result = await getFuturePlayTime(req.body.date)
-  res.send({futurePlay: result, jwt: jwt.sign({id,name:req.body.name,flag:req.body.flag}, JWT_KEY)})
+
+  res.send({futurePlay: result, jwt: jwt.sign(player, JWT_KEY)})
 });
 
+app.post('/updatePlayer', async(req, res) => {
+  let id = getId(req)
+  if (!id) {
+    res.sendStatus(401);
+    return;
+  }
+  await updatePlayer(id, req.body.name, req.body.flag, req.ip)
+  res.send({jwt: jwt.sign({id,name:req.body.name,flag:req.body.flag}, JWT_KEY)})
+})
 
 app.get('/listPeaks', async (req, res) => {
   const [peaks,futures] = await Promise.all([loadHourlyPeaks('ctf1'),loadFuturePlays('ctf1')])
