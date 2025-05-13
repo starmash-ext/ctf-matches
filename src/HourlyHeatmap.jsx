@@ -145,7 +145,7 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
                 </li>`).join("")}
               </ul>
 `
-              : `No players scheduled for ${d.day}, ${d.hour}h${d.easternHour} yet. Click to schedule`
+              : `No players scheduled for ${d.day}, ${d.hour}h${d.easternHour} yet. <b>Click to schedule</b>`
           )
           .style("left", (event.x) + "px")
           .style("top", (event.y) + "px")
