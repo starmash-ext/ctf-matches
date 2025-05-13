@@ -52,6 +52,9 @@ app.use(express.static('../dist'));
 
 const getId = req => {
   let id = null
+  if (!req.body.jwt) {
+    return
+  }
   jwt.verify(req.body.jwt, JWT_KEY, (err, decoded) => {
     if (err) {
       console.error('JWT verification failed:', err);
@@ -63,13 +66,15 @@ const getId = req => {
 }
 
 app.post('/togglePresence', async(req, res) => {
-  const id = getId(req)
-  let player = null
   const date = new Date(req.body.date)
   if (date.getMinutes() || date.getSeconds() || date.getMilliseconds() || date.getTime() > Date.now() + (4 * DAY)) {
     res.sendStatus(401)
     return
   }
+
+  const id = getId(req)
+  let player = null
+
   if (!id) {
     const id = await savePlayer(req.body.name, req.body.flag, req.ip, tokenGenerate(24))
     player = {id,name: req.body.name,flag: req.body.flag}

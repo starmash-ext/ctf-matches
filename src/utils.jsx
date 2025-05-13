@@ -48,8 +48,10 @@ export const createSeries = (hourlyPeaks,futures) => {
   const data = _.times(day => {
     const currentDay = (startAt + (day * DAY))
     const currentDate = new Date(currentDay)
+    const dayMonth = currentDate.toLocaleDateString(undefined, {month:"numeric",day:"numeric"})
     return ({
       row: day,
+      dayMonth,
       day:
         RELATIVE_DAY_LABEL[day] ||
         WEEKDAY_LABELS[currentDate.getDay()],
@@ -74,12 +76,12 @@ export const createSeries = (hourlyPeaks,futures) => {
         }
       },24)
     })
-  },10)
+  },14)
 
   return {
     columns:_.times(_.identity,24),
     rows: data.map(_.get('row')),
-    rowNames: data.map(({day})=>SMALL_DAY_LABEL[day]),
+    rowNames: data.map(({row,dayMonth})=> row === 7 ? "Today" : dayMonth ),
     data: data.flatMap(({day,values, row}) => values.map(({hour,value,...rest}) =>
       ({
         row,

@@ -29,16 +29,6 @@ export const initDB = () => {
       }
     );
     db.run(
-      `ALTER TABLE Player ADD COLUMN token TEXT`,
-      (err) => {
-        if (err) {
-          console.error("Column token in table Player:" + err.message);
-        } else {
-          console.log("Column token created or already exists.");
-        }
-      }
-    );
-    db.run(
       `CREATE TABLE IF NOT EXISTS FuturePlay (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         gametype TEXT,
