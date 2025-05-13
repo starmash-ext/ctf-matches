@@ -64,7 +64,7 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
       .style("font-size", "14px")
       .style("fill", "grey")
       .style("max-width", 400)
-      .text("Next few days + Past week");
+      .text("Past + Next week");
 
       const {rows,rowNames,columns,data} = createSeries(peaks,futures)
 
