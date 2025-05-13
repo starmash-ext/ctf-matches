@@ -1,4 +1,4 @@
-import React, {use, useLayoutEffect, useRef, useState} from 'react'
+import React, {use, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import _ from 'lodash/fp'
 import * as d3 from 'd3'
 import {createSeries, getJwtUser} from "./utils";
@@ -10,6 +10,10 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
   const loadedData = use(peaksPromise).data
   const [peaks,setPeaks] = useState(loadedData.peaks)
   const [futures,setFutures] = useState(loadedData.futures)
+  useEffect(() => {
+    setPeaks(loadedData.peaks)
+    setFutures(loadedData.futures)
+  }, [peaksPromise]);
   const d3ref = useRef(null)
   const tooltipRef = useRef(null)
   const [showSignupModal, setShowSignupModal] = useState()

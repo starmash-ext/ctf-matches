@@ -98,6 +98,7 @@ export const NameField = ({name,setName}) => <div>
   <TextInput
     type="text"
     required
+    autoFocus
     value={name}
     onChange={(e) => setName(e.target.value)}
   />
