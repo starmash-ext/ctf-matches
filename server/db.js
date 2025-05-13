@@ -215,10 +215,10 @@ export const updatePlayer = (id, name, flag, ip) => {
     }
     db.run(
       `UPDATE Player SET name = ?, flag = ? WHERE id = ?`,
-      [name, flag, ip, id],
+      [name, flag, id],
       function (err) {
         if (err) {
-          console.error("Error inserting player " + err.message);
+          console.error("Error updating player " + err.message);
           reject(err);
         } else {
           resolve(this.lastID);
