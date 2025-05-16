@@ -44,8 +44,8 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
     const items = createHeatMap(svg, {rows,rowNames,columns,data,currentUser})
     const tooltip = createTooltip(tooltipRef,items)
     const mousemove = function(event,d) {
-      const playersMayJoin = d?.players
-        ? `<div>Players that hope to join ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}:</div>
+      const playersMayJoin = (withTime) => d?.players
+        ? `<div>Players that hope to join${withTime ? ` ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}` : ""}:</div>
               <ul>
                 ${d.players.map(player => `<li style="word-break: keep-all">
                   ${player.flag ? `<img style="display: inline-block;" width=20 height=20 src='/flags/flag_${COUNTRY_CODE_TO_COUNTRY[player.flag]?.id}.png'/>` : ''} ${player.name}
@@ -57,10 +57,10 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
         .html(
           d.date < Date.now()
             ? `[${d.value}] players ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}
-              ${playersMayJoin}            
+              ${playersMayJoin(false)}            
             `
             : d?.players
-              ? playersMayJoin
+              ? playersMayJoin(true)
               : `No players scheduled for ${d.day}, ${d.hour}${wrapInfo(d.easternHour)} yet. <b>Click to schedule</b>`
         )
         .style("left", (event.x) + "px")
