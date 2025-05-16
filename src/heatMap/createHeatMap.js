@@ -2,13 +2,13 @@ import * as d3 from "d3";
 import {hourToAMPM} from "../utils.jsx";
 import _ from "lodash/fp.js";
 
-export const createHeatMap = (svg,{rows,rowNames,columns,data,currentUser}) => {
+export const createHeatMap = (chartSVG,{rows,rowNames,columns,data,currentUser}) => {
   // set the dimensions and margins of the graph
   const margin = {top: 0, right: 25, bottom: 20, left: 40},
     width = 650 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
-  svg.append("svg")
+  const svg = chartSVG.append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
