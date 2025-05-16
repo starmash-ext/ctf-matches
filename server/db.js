@@ -283,7 +283,7 @@ export const loadFuturePlays = (gametype) => {
       `SELECT player, name, flag, datetime FROM FuturePlay FP 
         JOIN Player P ON FP.player = P.id
     WHERE datetime > ? and gametype = ?`,
-      [Math.floor(Date.now() / 1000), gametype],
+      [Math.floor(Date.now() / 1000) - HOUR_IN_SECONDS, gametype],
       (err, rows) => {
         if (err) {
           console.error("Error loading future play time " + err.message);

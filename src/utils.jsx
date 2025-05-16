@@ -9,7 +9,7 @@ function getTimezoneOffsetForLongName(timeZone) {
   return h * 60 + (h > 0 ? +m : -m);
 }
 
-const hourToAMPM = (hour) => {
+export const hourToAMPM = (hour) => {
   const ampm = hour >= 12 ? 'PM' : 'AM';
   const hour12 = hour % 12 || 12;
   return `${hour12}${ampm}`;
@@ -76,7 +76,8 @@ export const createSeries = (hourlyPeaks,futures) => {
             date: currentTime,
             value: hourlyPeaks.find(({datetime}) =>
               (datetime * 1000) === (currentDate.getTime() + (hour * HOUR))
-            )?.playing || 0
+            )?.playing || 0,
+            players: futurePlaysMap[currentTime/1000]
           }
         }
       },24)
