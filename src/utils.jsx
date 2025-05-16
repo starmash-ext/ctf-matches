@@ -9,6 +9,11 @@ function getTimezoneOffsetForLongName(timeZone) {
   return h * 60 + (h > 0 ? +m : -m);
 }
 
+const hourToAMPM = (hour) => {
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${hour12}${ampm}`;
+}
 getTimezoneOffsetForLongName("EST")
 
 const WEEKDAY_LABELS = [
@@ -79,7 +84,7 @@ export const createSeries = (hourlyPeaks,futures) => {
   },14)
 
   return {
-    columns:_.times(_.identity,24),
+    columns:_.times(hourToAMPM,24),
     rows: data.map(_.get('row')),
     rowNames: data.map(({row,dayMonth})=> row === 7 ? "Today" : dayMonth ),
     data: data.flatMap(({day,values, row}) => values.map(({hour,value,...rest}) =>
@@ -87,7 +92,7 @@ export const createSeries = (hourlyPeaks,futures) => {
         row,
         daySmall: SMALL_DAY_LABEL[day],
         day,
-        hour,
+        hour: hourToAMPM(hour),
         easternHour: getEasternTime(rest.date,hour),
         value,
         ...rest
@@ -122,7 +127,7 @@ export const getEasternTime = (date, userHour) => {
   const USTimezone = getEasternTimeStatus()
   const UShour = (24 + new Date(date).getUTCHours() - (USTimezone === 'EDT' ? 4 : 5)) % 24
   if (userHour!==UShour) {
-    return ` (${UShour}h ${USTimezone})`
+    return ` (${hourToAMPM(UShour)} ${USTimezone})`
   }
 }
 
@@ -132,4 +137,9 @@ export const getJwtUser = () => {
   } catch (e) {
     return null
   }
+}
+
+
+export const wrapInfo = (text) => {
+  return text ? `<span className="EST-info">${text}</span>` : ''
 }

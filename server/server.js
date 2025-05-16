@@ -67,7 +67,7 @@ const getId = req => {
 
 app.post('/togglePresence', async(req, res) => {
   const date = new Date(req.body.date)
-  if (date.getMinutes() || date.getSeconds() || date.getMilliseconds() || date.getTime() > Date.now() + (4 * DAY)) {
+  if (date.getMinutes() || date.getSeconds() || date.getMilliseconds() || date.getTime() > Date.now() + (8 * DAY)) {
     res.sendStatus(401)
     return
   }

@@ -100,6 +100,7 @@ export const NameField = ({name,setName}) => <div>
     required
     autoFocus
     value={name}
+    maxLength={20}
     onChange={(e) => setName(e.target.value)}
   />
 </div>

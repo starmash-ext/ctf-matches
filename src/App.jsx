@@ -15,8 +15,11 @@ function App() {
   }, []);
   const refreshInterface = useReducer(() => ({}), {})[1]
   return <Suspense fallback={null}>
-    <HourlyHeatmap peaksPromise={peaksPromise} onCreateUser={refreshInterface} />
+    <h1>CTF matches calendar</h1>
+    <h3>Past + Next week <span className="current-timezone">(timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone})</span></h3>
     {getJwtUser() && <LoggedUserInfo onSuccess={() => {resetPeaksPromise(); refreshInterface()}}/>}
+    <HourlyHeatmap peaksPromise={peaksPromise} onCreateUser={refreshInterface} />
+
   </Suspense>
 }
 

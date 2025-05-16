@@ -42,12 +42,13 @@ export const LoggedUserInfo = ({onSuccess}) => {
 
 
 
-  return <div>
+  return <div style={{position: 'absolute', top:0, left: 625, transform: 'translateX(-100%)'}}>
     You will appear as: <span
     onClick={() => setEditDialog(true)}
     style={{display:'inline-block',borderRadius:'4px',backgroundColor:"#DDD",padding:'4px','cursor':'pointer'}}
   >
-    <FlagIcon code={user.flag} />{user.name}
+    <FlagIcon code={user.flag} />
+    <span className="user-info-name">{user.name}</span>
     <a style={{color:'#5490ea',fontSize:'12px'}}>(Edit)</a>
   </span>
 

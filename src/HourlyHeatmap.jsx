@@ -1,7 +1,7 @@
 import React, {use, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import _ from 'lodash/fp'
 import * as d3 from 'd3'
-import {createSeries, getJwtUser} from "./utils";
+import {createSeries, getJwtUser, wrapInfo} from "./utils";
 import axios from "axios";
 import {COUNTRY_CODE_TO_COUNTRY, SERVER_URL} from "./constants";
 import {SignupModal} from "./SignupModal.jsx";
@@ -36,9 +36,9 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
 
   useLayoutEffect(() => {
 // set the dimensions and margins of the graph
-    const margin = {top: 80, right: 25, bottom: 30, left: 40},
+    const margin = {top: 0, right: 25, bottom: 20, left: 40},
       width = 650 - margin.left - margin.right,
-      height = 450 - margin.top - margin.bottom;
+      height = 400 - margin.top - margin.bottom;
 
 // append the svg object to the body of the page
     const svg = d3.select(d3ref.current)
@@ -48,23 +48,6 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-// Add title to graph
-    svg.append("text")
-      .attr("x", 0)
-      .attr("y", -50)
-      .attr("text-anchor", "left")
-      .style("font-size", "22px")
-      .text("CTF matches calendar");
-
-// Add subtitle to graph
-    svg.append("text")
-      .attr("x", 0)
-      .attr("y", -20)
-      .attr("text-anchor", "left")
-      .style("font-size", "14px")
-      .style("fill", "grey")
-      .style("max-width", 400)
-      .text("Past + Next week");
 
       const {rows,rowNames,columns,data} = createSeries(peaks,futures)
 
@@ -78,7 +61,7 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
       svg.append("g")
         .style("font-size", 15)
         .attr("transform", `translate(0, ${height})`)
-        .call(d3.axisBottom(x).tickSize(0).tickValues(d3.range(0, 24, 3)))
+        .call(d3.axisBottom(x).tickSize(3).tickValues(columns.filter((_,i) => i % 3 === 0)))
         .select(".domain").remove()
 
       // Build Y scales and axis:
@@ -136,16 +119,16 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
         tooltip
           .html(
             d.date < Date.now()
-              ? `[${d.value}] players ${d.day}, ${d.hour}h${d.easternHour}`
+              ? `[${d.value}] players ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}`
               : d?.players
-                ? `Players that hope to join ${d.day}, ${d.hour}h${d.easternHour}: 
+                ? `Players that hope to join ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}: 
               <ul>
                 ${d.players.map(player => `<li style="word-break: keep-all">
                   ${player.flag ? `<img style="display: inline-block;" width=20 height=20 src='/flags/flag_${COUNTRY_CODE_TO_COUNTRY[player.flag]?.id}.png'/>` : ''} ${player.name}
                 </li>`).join("")}
               </ul>
 `
-              : `No players scheduled for ${d.day}, ${d.hour}h${d.easternHour} yet. <b>Click to schedule</b>`
+              : `No players scheduled for ${d.day}, ${d.hour}${wrapInfo(d.easternHour)} yet. <b>Click to schedule</b>`
           )
           .style("left", (event.x) + "px")
           .style("top", (event.y) + "px")
@@ -223,7 +206,7 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
   return (
     <div>
       <div id="chart">
-        <svg style={{height:"500px",width:"100%"}} ref={d3ref} />
+        <svg style={{height:"405px",width:"100%"}} ref={d3ref} />
       </div>
       <div id="html-dist"></div>
       <div ref={tooltipRef}/>
