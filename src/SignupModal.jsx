@@ -55,7 +55,7 @@ export function SignupModal({show, close, onSuccess}) {
             <div className="mb-2 block">
               <Label htmlFor="email1">Time and day</Label>
             </div>
-            <TextInput maxlength={20} type="text" readOnly value={show && `${show.day} at ${show.hour}h${show.easternHour}`}/>
+            <TextInput maxlength={20} type="text" readOnly value={show && `${show.day} at ${show.hour}${show.easternHour}`}/>
           </div>
           <NameField name={name} setName={setName} />
           <FlagField code={flag} setCode={setFlag}/>
