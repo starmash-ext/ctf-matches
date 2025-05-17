@@ -1,5 +1,4 @@
 import express from "express";
-import fs from 'node:fs'
 import {
   getFuturePlayTime, getPlayer,
   initDB,
@@ -11,7 +10,7 @@ import {
 } from "./db.js";
 import axios from "axios";
 import cors from 'cors'
-import {DAY, MINUTE, tokenGenerate} from "./utils.js";
+import {DAY, getJWTKey, MINUTE, tokenGenerate} from "./utils.js";
 import jwt from "jsonwebtoken";
 
 const app = express();
@@ -22,7 +21,7 @@ app.use(express.json())
 initDB()
 
 
-const JWT_KEY = fs.readFileSync('../../jwt-key.txt', 'utf8');
+const JWT_KEY = getJWTKey()
 const fetchAndStoreGameInfo = async () => {
   const result = await axios.get('https://data.airmash.rocks/games')
   try {
@@ -48,7 +47,7 @@ setInterval(fetchAndStoreGameInfo, 5 * MINUTE);
 fetchAndStoreGameInfo();
 
 
-app.use(express.static('../dist'));
+app.use(express.static('/app/dist'));
 
 const getId = req => {
   let id = null

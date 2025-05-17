@@ -7,8 +7,8 @@ import {getJwtUser} from "./utils.jsx";
 import {LoggedUserInfo} from "./LoggedUserInfo.jsx";
 
 function App() {
-  const [peaksPromise,setPeaksPromise] = useState(() => axios.get(SERVER_URL + "/listpeaks"))
-  const resetPeaksPromise = () => startTransition(() => setPeaksPromise(axios.get(SERVER_URL + "/listpeaks")))
+  const [peaksPromise,setPeaksPromise] = useState(() => axios.get(SERVER_URL + "listpeaks"))
+  const resetPeaksPromise = () => startTransition(() => setPeaksPromise(axios.get(SERVER_URL + "listpeaks")))
   useEffect(() => {
     const i = setInterval(resetPeaksPromise, 60000)
     return () => clearInterval(i)

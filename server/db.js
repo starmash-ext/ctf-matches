@@ -4,7 +4,7 @@ import e from "express";
 
 let db = null
 export const initDB = () => {
-  db = new sqlite.Database("../../db.sqlite", (err) => {
+  db = new sqlite.Database("/data/db.sqlite", (err) => {
     if (err) {
       console.error("Error opening database " + err.message);
     } else {

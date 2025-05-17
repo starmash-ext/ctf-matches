@@ -1,4 +1,4 @@
-export const SERVER_URL = "http://34.10.201.84/"
+export const SERVER_URL = "/"
 
 
 export const COUNTRIES = [
