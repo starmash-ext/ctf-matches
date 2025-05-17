@@ -49,7 +49,7 @@ export function SignupModal({show, close, onSuccess}) {
   return (
       <Modal show={show} onClose={close} size="md">
         <form onSubmit={submitForm}>
-        <ModalHeader>When do you plan to play</ModalHeader>
+        <ModalHeader>When do you intend to play</ModalHeader>
         <ModalBody>
           <div>
             <div className="mb-2 block">

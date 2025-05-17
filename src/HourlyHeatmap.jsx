@@ -45,7 +45,7 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
     const tooltip = createTooltip(tooltipRef,items)
     const mousemove = function(event,d) {
       const playersMayJoin = (withTime) => d?.players
-        ? `<div>Players that hope to join${withTime ? ` ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}` : ""}:</div>
+        ? `<div>Players that intend to join${withTime ? ` ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}` : ""}:</div>
               <ul>
                 ${d.players.map(player => `<li style="word-break: keep-all">
                   ${player.flag ? `<img style="display: inline-block;" width=20 height=20 src='/flags/flag_${COUNTRY_CODE_TO_COUNTRY[player.flag]?.id}.png'/>` : ''} ${player.name}
