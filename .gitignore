@@ -24,3 +24,9 @@ dist-ssr
 *.sln
 *.sw?
 /build/*
+
+# Local app data
+/data
+
+# Local configs
+docker-compose.local.yml
