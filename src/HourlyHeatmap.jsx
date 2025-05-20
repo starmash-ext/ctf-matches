@@ -1,7 +1,7 @@
 import React, {use, useEffect, useLayoutEffect, useRef, useState} from 'react'
 import _ from 'lodash/fp'
 import * as d3 from 'd3'
-import {createSeries, getJwtUser, hourToAMPM, wrapInfo} from "./utils";
+import {createSeries, getJwtUser, wrapInfo} from "./utils";
 import axios from "axios";
 import {COUNTRY_CODE_TO_COUNTRY, SERVER_URL} from "./constants";
 import {SignupModal} from "./SignupModal.jsx";
@@ -16,6 +16,7 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
     setPeaks(loadedData.peaks)
     setFutures(loadedData.futures)
   }, [peaksPromise]);
+  const hoverDatum = useRef(null)
   const d3ref = useRef(null)
   const tooltipRef = useRef(null)
   const [showSignupModal, setShowSignupModal] = useState()
@@ -48,21 +49,24 @@ export const HourlyHeatmap = ({peaksPromise,onCreateUser}) => {
         ? `<div>Players that intend to join${withTime ? ` ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}` : ""}:</div>
               <ul>
                 ${d.players.map(player => `<li style="word-break: keep-all">
-                  ${player.flag ? `<img style="display: inline-block;" width=20 height=20 src='/flags/flag_${COUNTRY_CODE_TO_COUNTRY[player.flag]?.id}.png'/>` : ''} ${player.name}
+                  ${player.flag ? `<img alt={player.flag} style="display: inline-block;" width=20 height=20 src='/flags/flag_${COUNTRY_CODE_TO_COUNTRY[player.flag]?.id}.png'/>` : ''} ${player.name}
                 </li>`).join("")}
               </ul>
 ` : ''
-
-      tooltip
-        .html(
-          d.date < Date.now()
-            ? `[${d.value}] players ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}
+      if (hoverDatum.current !== d) {
+        tooltip
+          .html(
+            d.date < Date.now()
+              ? `[${d.value}] players ${d.day}, ${d.hour}${wrapInfo(d.easternHour)}
               ${playersMayJoin(false)}            
             `
-            : d?.players
-              ? playersMayJoin(true)
-              : `No players scheduled for ${d.day}, ${d.hour}${wrapInfo(d.easternHour)} yet. <b>Click to schedule</b>`
-        )
+              : d?.players
+                ? playersMayJoin(true)
+                : `No players scheduled for ${d.day}, ${d.hour}${wrapInfo(d.easternHour)} yet. <b>Click to schedule</b>`
+          )
+      }
+      hoverDatum.current = d
+      tooltip
         .style("left", (event.x) + "px")
         .style("top", (event.y) + "px")
     }
